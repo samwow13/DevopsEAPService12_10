@@ -2,320 +2,13 @@
 <html>
 <head>
     <title>Dashboard</title>
-    <style>
-        :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #f5f6fa;
-            --success-color: #2ecc71;
-            --danger-color: #e74c3c;
-            --text-color: #2c3e50;
-            --border-color: #e1e8ed;
-            --light-blue: #f0f7ff;
-            --medium-blue: #2c5282;
-        }
-        
-        body {
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-        
-        .dashboard-container {
-            max-width: 1000px;
-            margin: 20px auto;
-            background-color: white;
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            position: relative;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2.5rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .logout-btn {
-            padding: 0.375rem 1.5rem;
-            background-color: var(--danger-color);
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            display: inline-block;
-            width: 100%;
-            text-align: center;
-            box-sizing: border-box;
-        }
-        
-        .logout-btn:hover {
-            background-color: #c0392b;
-            transform: translateY(-1px);
-        }
-        
-        .mode-indicator {
-            padding: 0.375rem 1.5rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 400;
-            display: block;
-            margin-top: 0.5rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            width: fit-content;
-            border: 1px dashed rgba(255, 255, 255, 0.5);
-            opacity: 0.9;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        
-        .mode-indicator.local {
-            background-color: rgba(46, 204, 113, 0.15);
-            color: var(--success-color);
-            border: 1px dashed var(--success-color);
-        }
-        
-        .mode-indicator.remote {
-            background-color: rgba(74, 144, 226, 0.15);
-            color: var(--primary-color);
-            border: 1px dashed var(--primary-color);
-        }
-        
-        .powershell-section {
-            margin-top: 2.5rem;
-            background-color: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-        }
-        
-        .connection-testing, .command-execution {
-            background-color: #ffffff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-top: 2rem;
-            transition: all 0.3s ease;
-        }
-        
-        .connection-testing:hover, .command-execution:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .input-group label {
-            display: block;
-            margin-bottom: 0.75rem;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        
-        .input-group input, .input-group textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            font-size: 1rem;
-        }
-        
-        .input-group input:focus, .input-group textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-        }
-        
-        .execute-btn {
-            padding: 0.75rem 1.5rem;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .execute-btn:hover {
-            background-color: #357abd;
-            transform: translateY(-1px);
-        }
-        
-        #output-area {
-            margin-top: 1.5rem;
-            padding: 1.5rem;
-            background-color: #1e1e1e;
-            color: #fff;
-            font-family: 'Consolas', 'Monaco', monospace;
-            border-radius: 6px;
-            min-height: 120px;
-            white-space: pre-wrap;
-            line-height: 1.4;
-        }
-        
-        .powershell-output {
-            font-family: 'Consolas', 'Monaco', monospace;
-            background-color: #1e1e1e;
-            color: #ffffff;
-            padding: 1.5rem;
-            border-radius: 6px;
-            margin-top: 1.5rem;
-            white-space: pre-wrap;
-            max-height: 300px;
-            overflow-y: auto;
-            line-height: 1.4;
-        }
-        
-        .process-grid {
-            margin-top: 2.5rem;
-            width: 100%;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: white;
-        }
-        
-        .grid-header {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            background-color: var(--medium-blue);
-            color: white;
-            padding: 0.3rem 1.5rem;
-            font-weight: 600;
-            border-bottom: 2px solid var(--border-color);
-        }
-        
-        .grid-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            padding: 0.3rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            align-items: center;
-            transition: background-color 0.3s ease;
-        }
-        
-        .grid-row:hover {
-            background-color: var(--secondary-color);
-        }
-        
-        .status-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 10px;
-            position: relative;
-        }
-        
-        .status-green {
-            background-color: var(--success-color);
-            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
-        }
-        
-        .status-red {
-            background-color: var(--danger-color);
-            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
-        }
-        
-        .action-btn {
-            padding: 0.5rem 1rem;
-            margin: 0 0.3rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            color: white;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .start-btn {
-            background-color: var(--success-color);
-        }
-        
-        .stop-btn {
-            background-color: var(--danger-color);
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-1px);
-            opacity: 0.9;
-        }
-        
-        .expansion-panel {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .expansion-panel:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        
-        .expansion-panel-header {
-            background-color: var(--light-blue);
-            padding: 0.1rem 1.5rem;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .expansion-panel-header:hover {
-            background-color: #e1eeff;
-        }
-        
-        .expansion-panel-content {
-            padding: 1.5rem;
-            display: none;
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .expansion-panel.expanded .expansion-panel-content {
-            display: block;
-        }
-        
-        .expansion-panel-header::after {
-            content: '▼';
-            font-size: 0.8rem;
-            transition: transform 0.3s ease;
-        }
-        
-        .expansion-panel.expanded .expansion-panel-header::after {
-            transform: rotate(180deg);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboardStyles.css') }}">
 </head>
 <body>
     <div class="dashboard-container">
         <div class="header">
             <h1>Welcome {{ username }}!</h1>
-            <div style="text-align: right;">
+            <div class="mode-indicator-container">
                 <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
                 <div class="mode-indicator {{ connection_mode.lower() }}">
                     {{ connection_mode }} Mode
@@ -326,7 +19,7 @@
         <div class="powershell-section">
             <div class="expansion-panel">
                 <div class="expansion-panel-header" onclick="togglePanel(this)">
-                    <h2 style="margin: 0">PowerShell Remote Session</h2>
+                    <h2>PowerShell Remote Session</h2>
                 </div>
                 <div class="expansion-panel-content">
                     <div class="connection-testing">
@@ -342,13 +35,13 @@
         
             <div class="expansion-panel">
                 <div class="expansion-panel-header" onclick="togglePanel(this)">
-                    <h2 style="margin: 0">PowerShell Commands</h2>
+                    <h2>PowerShell Commands</h2>
                 </div>
                 <div class="expansion-panel-content">
                     <div class="command-execution">
                         <div class="input-group">
                             <label for="command">Command:</label>
-                            <textarea id="command" placeholder="Enter PowerShell command" rows="5" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;"></textarea>
+                            <textarea id="command" placeholder="Enter PowerShell command" rows="5"></textarea>
                         </div>
                         <button class="execute-btn" onclick="executeCommand()">Execute Command</button>
                         <div id="output-area">Output will appear here...</div>
@@ -357,7 +50,7 @@
             </div>
         
             <!-- Process Grid rendered directly on the page -->
-            <div class="process-grid" style="margin-top: 2rem;">
+            <div class="process-grid">
                 <div class="grid-header">
                     <div>Process Name</div>
                     <div>Status</div>
