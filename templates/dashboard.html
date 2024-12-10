@@ -100,34 +100,6 @@
             min-height: 100px;
             white-space: pre-wrap;
         }
-        .process-grid {
-            margin-top: 2rem;
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .process-grid th, .process-grid td {
-            padding: 0.5rem;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            background-color: green;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        .action-btn {
-            padding: 0.3rem 0.6rem;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .action-btn:hover {
-            background-color: #0056b3;
-        }
         .powershell-output {
             font-family: 'Consolas', monospace;
             background-color: #012456;
@@ -139,29 +111,57 @@
             max-height: 200px;
             overflow-y: auto;
         }
-        .connection-status {
-            padding: 0.5rem;
-            margin-top: 0.5rem;
+        .process-grid {
+            margin-top: 2rem;
+            width: 100%;
+            border: 1px solid #dee2e6;
             border-radius: 4px;
+            overflow: hidden;
         }
-        .connection-status.success {
+        .grid-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            font-weight: bold;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .grid-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            align-items: center;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-green {
             background-color: #28a745;
-            color: white;
         }
-        .connection-status.error {
+        .status-red {
             background-color: #dc3545;
+        }
+        .action-btn {
+            padding: 0.3rem 0.6rem;
+            margin: 0 0.2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
             color: white;
         }
-        .connection-testing {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 2rem;
+        .start-btn {
+            background-color: #28a745;
         }
-        .command-execution {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 4px;
+        .stop-btn {
+            background-color: #dc3545;
+        }
+        .action-btn:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
@@ -192,157 +192,105 @@
                 <button class="execute-btn" onclick="executeCommand()">Execute Command</button>
                 <div id="output-area">Output will appear here...</div>
             </div>
-        </div>
-        <div class="process-section">
-            <h2>Process Management</h2>
-            <table class="process-grid">
-                <thead>
-                    <tr>
-                        <th>Process Name</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="process-list">
-                    <!-- Process rows will be dynamically inserted here -->
-                </tbody>
-            </table>
+            
+            <div class="process-grid">
+                <div class="grid-header">
+                    <div>Process Name</div>
+                    <div>Status</div>
+                    <div>Actions</div>
+                </div>
+                <div id="process-list">
+                    <!-- Process rows will be added here -->
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         function executeCommand() {
-            const outputArea = document.getElementById('output-area');
             const command = document.getElementById('command').value;
-            outputArea.textContent = "Executing PowerShell command...";
-            fetch('/test_ps_connection', {
+            const computer = document.getElementById('computer').value;
+            
+            fetch('/execute', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    command: command
+                    command: command,
+                    computer: computer
                 })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    if (data.processes) {
-                        // For Get-Process command, update the grid and show success message
-                        populateProcessGrid(data.processes);
-                        outputArea.textContent = `Successfully retrieved ${data.processes.length} processes`;
-                    } else if (data.output) {
-                        // For other commands, show the command output
-                        outputArea.textContent = Array.isArray(data.output) ? data.output.join('\n') : data.output;
-                    } else {
-                        // If no specific output, show the success message
-                        outputArea.textContent = data.message;
-                    }
-                } else {
-                    outputArea.textContent = "Error: " + data.message;
+                document.getElementById('output-area').innerText = data.output.join('\n');
+                
+                // If the command is checking for a process, update the process grid
+                if (command.includes('Get-Process')) {
+                    updateProcessGrid(command, data.output[0]);
                 }
             })
             .catch(error => {
-                outputArea.textContent = "Error executing command: " + error.message;
+                console.error('Error:', error);
+                document.getElementById('output-area').innerText = 'Error executing command';
             });
         }
 
-        function populateProcessGrid(processes) {
-            if (!Array.isArray(processes)) {
-                console.error('Expected processes to be an array');
-                return;
-            }
+        function updateProcessGrid(command, output) {
             const processList = document.getElementById('process-list');
-            processList.innerHTML = '';
-            processes.forEach(process => {
-                const row = document.createElement('tr');
+            processList.innerHTML = ''; // Clear existing rows
+            
+            // Extract process name from command (assuming it's in the format "Get-Process -Name processname")
+            const processMatch = command.match(/-Name\s+(\w+)/);
+            if (processMatch) {
+                const processName = processMatch[1];
+                const isRunning = output.includes("is running");
+                
+                const row = document.createElement('div');
+                row.className = 'grid-row';
                 row.innerHTML = `
-                    <td>${process.name || ''}</td>
-                    <td>${process.running ? '<span class="status-dot"></span>' : ''}</td>
-                    <td>
-                        <button class="action-btn" onclick="startProcess('${process.name || ''}')">Start</button>
-                        <button class="action-btn" onclick="stopProcess('${process.name || ''}')">Stop</button>
-                    </td>
+                    <div>${processName}</div>
+                    <div>
+                        <span class="status-indicator ${isRunning ? 'status-green' : 'status-red'}"></span>
+                        ${isRunning ? 'Running' : 'Not Running'}
+                    </div>
+                    <div>
+                        <button onclick="startProcess('${processName}')" class="action-btn start-btn">Start</button>
+                        <button onclick="stopProcess('${processName}')" class="action-btn stop-btn">Stop</button>
+                    </div>
                 `;
                 processList.appendChild(row);
-            });
-        }
-
-        async function testConnection() {
-            const computer = document.getElementById('computer').value;
-            const outputArea = document.getElementById('test-connection-output');
-            
-            try {
-                outputArea.textContent = "Testing connection...";
-                const response = await fetch('/test_ps_connection', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        computer: computer,
-                        test_connection: true
-                    })
-                });
-                
-                const data = await response.json();
-                let output = `Command executed: ${data.command || ""}\n\n`;
-                output += `${data.message}\n`;
-                if (data.output && data.output.length > 0) {
-                    output += `\nOutput:\n${data.output.join("\n")}`;
-                }
-                outputArea.textContent = output;
-                
-                // Add status indicator
-                outputArea.className = 'powershell-output ' + (data.success ? 'success' : 'error');
-                
-            } catch (error) {
-                outputArea.textContent = "Error testing connection: " + error.message;
-                outputArea.className = 'powershell-output error';
             }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchProcesses();
-        });
-
-        function fetchProcesses() {
-            fetch('/processes')
-                .then(response => response.json())
-                .then(data => {
-                    const processList = document.getElementById('process-list');
-                    processList.innerHTML = '';
-                    data.forEach(process => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${process.name}</td>
-                            <td>${process.running ? '<span class="status-dot"></span>' : ''}</td>
-                            <td>
-                                <button class="action-btn" onclick="startProcess('${process.name}')">Start</button>
-                                <button class="action-btn" onclick="stopProcess('${process.name}')">Stop</button>
-                            </td>
-                        `;
-                        processList.appendChild(row);
-                    });
-                });
         }
 
         function startProcess(processName) {
-            fetch(`/process/start/${processName}`, { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    fetchProcesses();
-                });
+            alert('Start process functionality will be implemented next');
         }
 
         function stopProcess(processName) {
-            fetch(`/process/stop/${processName}`, { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    fetchProcesses();
-                });
+            alert('Stop process functionality will be implemented next');
+        }
+
+        function testConnection() {
+            const computer = document.getElementById('computer').value;
+            
+            fetch('/test_connection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    computer: computer
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('test-connection-output').innerText = data.message;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('test-connection-output').innerText = 'Error testing connection';
+            });
         }
     </script>
 </body>
