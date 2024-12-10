@@ -3,218 +3,344 @@
 <head>
     <title>Dashboard</title>
     <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --text-color: #2c3e50;
+            --border-color: #e1e8ed;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f0f2f5;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
+        
         .dashboard-container {
-            max-width: 800px;
-            margin: 0 auto;
+            max-width: 1000px;
+            margin: 20px auto;
             background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             position: relative;
         }
+        
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
         }
+        
         .logout-btn {
-            padding: 0.5rem 1rem;
-            background-color: #dc3545;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--danger-color);
             color: white;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
+        
         .logout-btn:hover {
-            background-color: #c82333;
+            background-color: #c0392b;
+            transform: translateY(-1px);
         }
+        
         .mode-indicator {
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 6px 12px;
+            border-radius: 6px;
             font-size: 0.9rem;
-            font-weight: bold;
-            position: absolute;
-            top: 20px;
-            left: 20px;
-        }
-        .mode-indicator.local {
-            background-color: #28a745;
-            color: white;
-        }
-        .mode-indicator.remote {
-            background-color: #007bff;
-            color: white;
-        }
-        .powershell-section {
-            margin-top: 2rem;
-        }
-        .connection-testing {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 4px;
-        }
-        .command-execution {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-top: 2rem;
-        }
-        .input-group {
+            font-weight: 600;
             margin-bottom: 1rem;
+            display: inline-block;
+            transition: all 0.3s ease;
         }
+        
+        .mode-indicator.local {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .mode-indicator.remote {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .powershell-section {
+            margin-top: 2.5rem;
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .connection-testing, .command-execution {
+            background-color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-top: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .connection-testing:hover, .command-execution:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
         .input-group label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--text-color);
         }
-        .input-group input {
+        
+        .input-group input, .input-group textarea {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
         }
-        .input-group textarea {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
+        
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
         }
+        
         .execute-btn {
-            padding: 0.5rem 1rem;
-            background-color: #007bff;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
+        
         .execute-btn:hover {
-            background-color: #0056b3;
+            background-color: #357abd;
+            transform: translateY(-1px);
         }
-        .test-btn {
-            padding: 0.5rem 1rem;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 0.5rem;
-        }
-        .test-btn:hover {
-            background-color: #218838;
-        }
+        
         #output-area {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #000;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background-color: #1e1e1e;
             color: #fff;
-            font-family: monospace;
-            border-radius: 4px;
-            min-height: 100px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            border-radius: 6px;
+            min-height: 120px;
             white-space: pre-wrap;
+            line-height: 1.4;
         }
+        
         .powershell-output {
-            font-family: 'Consolas', monospace;
-            background-color: #012456;
+            font-family: 'Consolas', 'Monaco', monospace;
+            background-color: #1e1e1e;
             color: #ffffff;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-top: 1rem;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-top: 1.5rem;
             white-space: pre-wrap;
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
+            line-height: 1.4;
         }
+        
         .process-grid {
-            margin-top: 2rem;
+            margin-top: 2.5rem;
             width: 100%;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             overflow: hidden;
+            background-color: white;
         }
+        
         .grid-header {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            background-color: #f8f9fa;
-            padding: 1rem;
-            font-weight: bold;
-            border-bottom: 2px solid #dee2e6;
+            background-color: var(--secondary-color);
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
         }
+        
         .grid-row {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            padding: 1rem;
-            border-bottom: 1px solid #dee2e6;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
             align-items: center;
+            transition: background-color 0.3s ease;
         }
+        
+        .grid-row:hover {
+            background-color: var(--secondary-color);
+        }
+        
         .status-indicator {
             display: inline-block;
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            margin-right: 8px;
+            margin-right: 10px;
+            position: relative;
         }
+        
         .status-green {
-            background-color: #28a745;
+            background-color: var(--success-color);
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
         }
+        
         .status-red {
-            background-color: #dc3545;
+            background-color: var(--danger-color);
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
         }
+        
         .action-btn {
-            padding: 0.3rem 0.6rem;
-            margin: 0 0.2rem;
+            padding: 0.5rem 1rem;
+            margin: 0 0.3rem;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
+        
         .start-btn {
-            background-color: #28a745;
+            background-color: var(--success-color);
         }
+        
         .stop-btn {
-            background-color: #dc3545;
+            background-color: var(--danger-color);
         }
+        
         .action-btn:hover {
+            transform: translateY(-1px);
             opacity: 0.9;
+        }
+        
+        .expansion-panel {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .expansion-panel:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .expansion-panel-header {
+            background-color: var(--secondary-color);
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .expansion-panel-header:hover {
+            background-color: #e9ecef;
+        }
+        
+        .expansion-panel-content {
+            padding: 1.5rem;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .expansion-panel.expanded .expansion-panel-content {
+            display: block;
+        }
+        
+        .expansion-panel-header::after {
+            content: '▼';
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .expansion-panel.expanded .expansion-panel-header::after {
+            transform: rotate(180deg);
         }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <div class="mode-indicator {{ connection_mode.lower() }}">
-            {{ connection_mode }} Mode
-        </div>
         <div class="header">
+            <div class="mode-indicator {{ connection_mode.lower() }}">
+                {{ connection_mode }} Mode
+            </div>
             <h1>Welcome {{ username }}!</h1>
             <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
         </div>
         
         <div class="powershell-section">
-            <h2>PowerShell Remote Session</h2>
-            <div class="connection-testing">
-                <div class="input-group">
-                    <label for="computer">Computer Name:</label>
-                    <input type="text" id="computer" name="computer" required>
+            <div class="expansion-panel">
+                <div class="expansion-panel-header" onclick="togglePanel(this)">
+                    <h2 style="margin: 0">PowerShell Remote Session</h2>
                 </div>
-                <button onclick="testConnection()">Test Connection</button>
-                <div id="test-connection-output" class="powershell-output"></div>
-            </div>
-            
-            <h2>PowerShell Commands</h2>
-            <div class="command-execution">
-                <div class="input-group">
-                    <label for="command">Command:</label>
-                    <textarea id="command" placeholder="Enter PowerShell command" rows="5" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;"></textarea>
+                <div class="expansion-panel-content">
+                    <div class="connection-testing">
+                        <div class="input-group">
+                            <label for="computer">Computer Name:</label>
+                            <input type="text" id="computer" name="computer" required>
+                        </div>
+                        <button class="execute-btn" onclick="testConnection()">Test Connection</button>
+                        <div id="test-connection-output" class="powershell-output"></div>
+                    </div>
                 </div>
-                <button class="execute-btn" onclick="executeCommand()">Execute Command</button>
-                <div id="output-area">Output will appear here...</div>
             </div>
-            
-            <div class="process-grid">
+        
+            <div class="expansion-panel">
+                <div class="expansion-panel-header" onclick="togglePanel(this)">
+                    <h2 style="margin: 0">PowerShell Commands</h2>
+                </div>
+                <div class="expansion-panel-content">
+                    <div class="command-execution">
+                        <div class="input-group">
+                            <label for="command">Command:</label>
+                            <textarea id="command" placeholder="Enter PowerShell command" rows="5" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px;"></textarea>
+                        </div>
+                        <button class="execute-btn" onclick="executeCommand()">Execute Command</button>
+                        <div id="output-area">Output will appear here...</div>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- Process Grid rendered directly on the page -->
+            <div class="process-grid" style="margin-top: 2rem;">
                 <div class="grid-header">
                     <div>Process Name</div>
                     <div>Status</div>
@@ -225,7 +351,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <script>
         function executeCommand() {
@@ -319,6 +444,11 @@
                 console.error('Error:', error);
                 document.getElementById('test-connection-output').innerText = 'Error testing connection';
             });
+        }
+
+        function togglePanel(header) {
+            const panel = header.closest('.expansion-panel');
+            panel.classList.toggle('expanded');
         }
     </script>
 </body>
