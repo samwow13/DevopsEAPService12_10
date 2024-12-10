@@ -38,7 +38,10 @@ def login():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', username=current_user.id)
+    # Default to Local mode if not set
+    if 'connection_mode' not in session:
+        session['connection_mode'] = 'Local'
+    return render_template('dashboard.html', username=current_user.id, connection_mode=session['connection_mode'])
 
 @app.route('/logout')
 @login_required
@@ -50,19 +53,22 @@ def logout():
 @login_required
 def test_connection():
     data = request.get_json()
-    computer = data.get('computer', '')
-    
     try:
-        # Test basic connection
-        return jsonify({
-            'success': True,
-            'message': f'Successfully connected to {computer}'
-        })
+        if data.get('computer_name') and data.get('username') and data.get('password'):
+            # Attempt remote connection
+            wsman = WSMan(data['computer_name'], username=data['username'], password=data['password'])
+            with RunspacePool(wsman) as pool:
+                ps = PowerShell(pool)
+                ps.add_script("$env:COMPUTERNAME")
+                output = ps.invoke()
+                session['connection_mode'] = 'Remote'
+                return jsonify({'success': True, 'message': f'Successfully connected to {output[0]}'})
+        else:
+            session['connection_mode'] = 'Local'
+            return jsonify({'success': False, 'message': 'Missing connection details'})
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'Connection failed: {str(e)}'
-        })
+        session['connection_mode'] = 'Local'
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/execute', methods=['POST'])
 @login_required

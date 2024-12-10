@@ -16,6 +16,7 @@
             padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
         .header {
             display: flex;
@@ -32,6 +33,23 @@
         }
         .logout-btn:hover {
             background-color: #c82333;
+        }
+        .mode-indicator {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .mode-indicator.local {
+            background-color: #28a745;
+            color: white;
+        }
+        .mode-indicator.remote {
+            background-color: #007bff;
+            color: white;
         }
         .powershell-section {
             margin-top: 2rem;
@@ -167,6 +185,9 @@
 </head>
 <body>
     <div class="dashboard-container">
+        <div class="mode-indicator {{ connection_mode.lower() }}">
+            {{ connection_mode }} Mode
+        </div>
         <div class="header">
             <h1>Welcome {{ username }}!</h1>
             <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
