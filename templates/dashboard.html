@@ -225,9 +225,9 @@
             .then(data => {
                 document.getElementById('output-area').innerText = data.output.join('\n');
                 
-                // If the command is checking for a process, update the process grid
-                if (command.includes('Get-Process')) {
-                    updateProcessGrid(command, data.output[0]);
+                // If the command is checking for processes, update the process grid
+                if (command.toLowerCase().includes('get-process')) {
+                    updateProcessGrid(data.output);
                 }
             })
             .catch(error => {
@@ -236,16 +236,23 @@
             });
         }
 
-        function updateProcessGrid(command, output) {
+        function updateProcessGrid(output) {
             const processList = document.getElementById('process-list');
             processList.innerHTML = ''; // Clear existing rows
             
-            // Extract process name from command (assuming it's in the format "Get-Process -Name processname")
-            const processMatch = command.match(/-Name\s+(\w+)/);
-            if (processMatch) {
-                const processName = processMatch[1];
-                const isRunning = output.includes("is running");
-                
+            // Parse the output to get process statuses
+            const processStatuses = {};
+            output.forEach(line => {
+                const match = line.match(/(\w+) is (not )?running/);
+                if (match) {
+                    const processName = match[1];
+                    const isRunning = !match[2]; // if match[2] is undefined, process is running
+                    processStatuses[processName] = isRunning;
+                }
+            });
+            
+            // Create a row for each process
+            Object.entries(processStatuses).forEach(([processName, isRunning]) => {
                 const row = document.createElement('div');
                 row.className = 'grid-row';
                 row.innerHTML = `
@@ -255,12 +262,12 @@
                         ${isRunning ? 'Running' : 'Not Running'}
                     </div>
                     <div>
-                        <button onclick="startProcess('${processName}')" class="action-btn start-btn">Start</button>
-                        <button onclick="stopProcess('${processName}')" class="action-btn stop-btn">Stop</button>
+                        <button onclick="startProcess('${processName}')" class="action-btn start-btn" ${isRunning ? 'disabled' : ''}>Start</button>
+                        <button onclick="stopProcess('${processName}')" class="action-btn stop-btn" ${!isRunning ? 'disabled' : ''}>Stop</button>
                     </div>
                 `;
                 processList.appendChild(row);
-            }
+            });
         }
 
         function startProcess(processName) {
