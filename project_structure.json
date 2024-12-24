@@ -1,0 +1,114 @@
+{
+    "name": "DevopsEAPService",
+    "description": "A Flask-based web application for DevOps EAP Service management",
+    "version": "1.0.0",
+    "structure": {
+        "root": {
+            "app.py": {
+                "type": "file",
+                "description": "Main application entry point",
+                "components": {
+                    "routes": [
+                        "/",
+                        "/login",
+                        "/dashboard",
+                        "/logout"
+                    ],
+                    "classes": ["User"],
+                    "functions": [
+                        "load_user",
+                        "index",
+                        "login",
+                        "dashboard",
+                        "logout",
+                        "test_connection",
+                        "execute_command"
+                    ]
+                }
+            },
+            "requirements.txt": {
+                "type": "file",
+                "description": "Python package dependencies"
+            },
+            ".gitignore": {
+                "type": "file",
+                "description": "Git ignore rules"
+            },
+            "static": {
+                "type": "directory",
+                "description": "Static assets directory",
+                "contents": {
+                    "dashboardStyles.css": {
+                        "type": "file",
+                        "description": "Dashboard page styling"
+                    },
+                    "loginStyles.css": {
+                        "type": "file",
+                        "description": "Login page styling"
+                    }
+                }
+            },
+            "templates": {
+                "type": "directory",
+                "description": "HTML templates directory",
+                "contents": {
+                    "dashboard.html": {
+                        "type": "file",
+                        "description": "Dashboard page template"
+                    },
+                    "login.html": {
+                        "type": "file",
+                        "description": "Login page template"
+                    }
+                }
+            },
+            "config": {
+                "type": "directory",
+                "description": "Configuration files",
+                "contents": {
+                    "server_config.py": {
+                        "type": "file",
+                        "description": "Server configuration settings"
+                    },
+                    "ui_config.py": {
+                        "type": "file",
+                        "description": "UI configuration settings"
+                    }
+                }
+            }
+        },
+        "planned_structure": {
+            "modules": {
+                "type": "directory",
+                "description": "Future modular components",
+                "contents": {
+                    "auth": {
+                        "type": "directory",
+                        "description": "Authentication related functionality"
+                    },
+                    "powershell": {
+                        "type": "directory",
+                        "description": "PowerShell execution related functionality"
+                    },
+                    "utils": {
+                        "type": "directory",
+                        "description": "Utility functions and helpers"
+                    }
+                }
+            },
+            "logs": {
+                "type": "directory",
+                "description": "Application logs directory"
+            },
+            "tests": {
+                "type": "directory",
+                "description": "Test files directory"
+            }
+        }
+    },
+    "metadata": {
+        "last_updated": "2024-12-24T08:13:22-08:00",
+        "framework": "Flask",
+        "language": "Python"
+    }
+}

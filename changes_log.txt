@@ -1,0 +1,72 @@
+# DevopsEAPService Changes Log
+
+## 2024-12-20
+- Created project_structure.json to document current and planned codebase organization
+- Created changes_log.txt to track project changes
+- Established initial project structure documentation
+- Identified future modular components for code organization
+- Added server selection dropdown with configuration support:
+  - Created config/server_config.py for server configurations
+  - Added server selection UI to dashboard
+  - Implemented server selection handling in backend
+  - Added styling for server selection dropdown
+  - Integrated server selection with existing PowerShell functionality
+
+## 2024-12-24
+- Fixed syntax error in server_config.py:
+  - Removed duplicate SERVER_CONFIGS definition
+  - Merged all server configurations into a single dictionary
+  - Added 'processes' field to PROD-1 and DEV-1 configurations
+  - Ensured consistent formatting and documentation
+
+## 2024-12-24 (continued)
+- Added process-specific start and stop commands to server configuration
+- Created ProcessManager module for handling process operations
+- Added modal dialog to display process commands
+- Updated server configuration to include detailed process commands
+- Added new endpoint /get_process_commands to fetch process-specific commands
+- Enhanced start/stop buttons to show commands in modal dialog
+- Added UI configuration system:
+  - Created config/ui_config.py for UI-specific settings
+  - Added show_powershell_remote_session configuration option
+  - Updated dashboard template to conditionally render PowerShell Remote Session dropdown
+  - Modified app.py to pass UI configuration to templates
+- Refined UI configuration for PowerShell Remote Session:
+  - Modified condition to only hide PowerShell Remote Session and PowerShell Commands panels
+  - Kept server selection and process grid always visible
+- Fixed UI configuration for PowerShell Remote Session:
+  - Updated dashboard template to properly hide entire PowerShell section
+  - Moved UI configuration condition to wrap all PowerShell-related elements
+- Added PowerShell panels toggle functionality:
+  - Added checkbox control next to mode indicator
+  - Created /update_ui_config endpoint to update configuration
+  - Added JavaScript toggle function with error handling
+  - Styled checkbox to match existing UI
+
+## 2024-12-24 (domain configuration)
+- Added domain configuration system:
+  - Created config/domain_config.py for network and site settings
+  - Added configurable site name (default: devops.local)
+  - Integrated domain configuration with app.py
+  - Added support for future SSL/TLS configuration
+  - Made network settings configurable through config file
+
+## 2024-12-24 (custom domain setup)
+- Set up custom domain configuration:
+  - Updated domain_config.py with new site name: devops.internal.eapmanager
+  - Created setup_domain.ps1 script for hosts file configuration
+  - Added documentation for domain setup process
+
+## 2024-12-24 (network configuration cleanup)
+- Simplified network configuration:
+  - Removed domain name configuration
+  - Simplified domain_config.py to network_config.py
+  - Kept network settings for IP-based access
+  - Note: DNS configuration will be handled by DevOps team if needed
+
+## Planned Improvements
+- Split app.py into modular components
+- Implement proper authentication system
+- Add comprehensive logging
+- Create test suite
+- Modularize PowerShell execution functionality

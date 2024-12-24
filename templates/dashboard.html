@@ -3,20 +3,99 @@
 <head>
     <title>Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboardStyles.css') }}">
+    <style>
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 5px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        /* Process status indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-running { background-color: #4CAF50; }
+        .status-stopped { background-color: #f44336; }
+        .status-starting { background-color: #2196F3; }
+        .status-stopping { background-color: #FF9800; }
+        .status-error { background-color: #9C27B0; }
+        
+        /* Disable button styles */
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        
+        .mode-toggle input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        
+        .mode-toggle label {
+            color: #333;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
         <div class="header">
             <h1>Welcome {{ username }}!</h1>
             <div class="mode-indicator-container">
-                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                <div class="mode-toggle">
+                    <input type="checkbox" id="show-powershell" {% if ui_config.show_powershell_remote_session %}checked{% endif %} onchange="togglePowershellPanels()">
+                    <label for="show-powershell">Show PowerShell</label>
+                </div>
                 <div class="mode-indicator {{ connection_mode.lower() }}">
                     {{ connection_mode }} Mode
                 </div>
+                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
             </div>
         </div>
         
         <div class="powershell-section">
+            {% if ui_config.show_powershell_remote_session %}
             <div class="expansion-panel">
                 <div class="expansion-panel-header" onclick="togglePanel(this)">
                     <h2>PowerShell Remote Session</h2>
@@ -48,6 +127,19 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
+        
+            <div class="server-selection">
+                <label for="server-select">Select Server:</label>
+                <select id="server-select" onchange="updateServerConnection()">
+                    <option value="Local PC">Local PC</option>
+                    {% for server in servers %}
+                        {% if server != 'Local PC' %}
+                        <option value="{{ server }}">{{ server }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
         
             <!-- Process Grid rendered directly on the page -->
             <div class="process-grid">
@@ -61,6 +153,15 @@
                 </div>
             </div>
         </div>
+        
+    <!-- Add modal dialog -->
+    <div id="commandModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Process Command</h3>
+            <p id="commandText"></p>
+        </div>
+    </div>
 
     <script>
         function executeCommand() {
@@ -126,12 +227,80 @@
             });
         }
 
+        // Modal handling
+        const modal = document.getElementById("commandModal");
+        const span = document.getElementsByClassName("close")[0];
+        const commandText = document.getElementById("commandText");
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        function showCommand(text) {
+            commandText.textContent = text;
+            modal.style.display = "block";
+        }
+
         function startProcess(processName) {
-            alert('Start process functionality will be implemented next');
+            const serverSelect = document.getElementById('server-select');
+            const serverName = serverSelect.value || 'Local PC';  // Default to Local PC if not selected
+            
+            fetch('/get_process_commands', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    server: serverName,
+                    process: processName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showCommand(`Start Command: ${data.start_command}`);
+                } else {
+                    showCommand(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showCommand('Error fetching process commands');
+            });
         }
 
         function stopProcess(processName) {
-            alert('Stop process functionality will be implemented next');
+            const serverSelect = document.getElementById('server-select');
+            const serverName = serverSelect.value || 'Local PC';  // Default to Local PC if not selected
+            
+            fetch('/get_process_commands', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    server: serverName,
+                    process: processName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showCommand(`Stop Command: ${data.stop_command}`);
+                } else {
+                    showCommand(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showCommand('Error fetching process commands');
+            });
         }
 
         function testConnection() {
@@ -159,6 +328,397 @@
         function togglePanel(header) {
             const panel = header.closest('.expansion-panel');
             panel.classList.toggle('expanded');
+        }
+
+        function updateServerConnection() {
+            const serverSelect = document.getElementById('server-select');
+            const selectedServer = serverSelect.value;
+            
+            if (!selectedServer) {
+                return;
+            }
+
+            fetch('/update_server', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    server: selectedServer
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update computer name field with selected server
+                    document.getElementById('computer').value = selectedServer;
+                    // Clear any previous output
+                    document.getElementById('test-connection-output').innerText = '';
+                    document.getElementById('output-area').innerText = 'Output will appear here...';
+                } else {
+                    alert('Failed to update server connection: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating server connection');
+            });
+        }
+        
+        // Process status constants
+        const ProcessStatus = {
+            STARTING: 'starting',
+            STOPPING: 'stopping',
+            RUNNING: 'running',
+            STOPPED: 'stopped',
+            ERROR: 'error'
+        };
+
+        // Track active processes and their status
+        let activeProcesses = new Map();
+        let statusPollingIntervals = new Map();
+
+        // Status polling interval (ms)
+        const POLLING_INTERVAL = 2000;
+        const MAX_POLLING_ATTEMPTS = 30; // 1 minute maximum polling time
+
+        function startProcess(processName) {
+            const serverSelect = document.getElementById('server-select');
+            const serverName = serverSelect.value || 'Local PC';
+            
+            // Update UI to show starting state
+            updateProcessUI(processName, ProcessStatus.STARTING);
+            showCommand('Starting Service...');
+            
+            // Execute the start command
+            fetch('/execute_process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    server: serverName,
+                    process: processName,
+                    action: 'start'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Start polling for status
+                    startStatusPolling(serverName, processName);
+                } else {
+                    updateProcessUI(processName, ProcessStatus.ERROR);
+                    showCommand(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                updateProcessUI(processName, ProcessStatus.ERROR);
+                showCommand('Error starting process');
+            });
+        }
+
+        function stopProcess(processName) {
+            const serverSelect = document.getElementById('server-select');
+            const serverName = serverSelect.value || 'Local PC';
+            
+            // Update UI to show stopping state
+            updateProcessUI(processName, ProcessStatus.STOPPING);
+            showCommand('Stopping Service...');
+            
+            // Execute the stop command
+            fetch('/execute_process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    server: serverName,
+                    process: processName,
+                    action: 'stop'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Start polling for status
+                    startStatusPolling(serverName, processName);
+                } else {
+                    updateProcessUI(processName, ProcessStatus.ERROR);
+                    showCommand(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                updateProcessUI(processName, ProcessStatus.ERROR);
+                showCommand('Error stopping process');
+            });
+        }
+
+        // Status polling function
+        function startStatusPolling(serverName, processName) {
+            // Clear any existing polling
+            if (statusPollingIntervals.has(processName)) {
+                clearInterval(statusPollingIntervals.get(processName));
+            }
+            
+            let attempts = 0;
+            
+            function pollStatus() {
+                fetch('/process_status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server: serverName,
+                        process: processName
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    attempts++;
+                    
+                    if (data.success) {
+                        updateProcessUI(processName, data.status);
+                        
+                        // If process reached final state or max attempts reached
+                        if (data.status === ProcessStatus.RUNNING || 
+                            data.status === ProcessStatus.STOPPED || 
+                            attempts >= MAX_POLLING_ATTEMPTS) {
+                            clearInterval(statusPollingIntervals.get(processName));
+                            statusPollingIntervals.delete(processName);
+                            
+                            if (attempts >= MAX_POLLING_ATTEMPTS) {
+                                showCommand(`Warning: Timed out waiting for ${processName} status`);
+                            }
+                        }
+                    } else {
+                        console.error('Error polling status:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error polling status:', error);
+                });
+            }
+            
+            // Start polling
+            const intervalId = setInterval(pollStatus, POLLING_INTERVAL);
+            statusPollingIntervals.set(processName, intervalId);
+            
+            // Do first poll immediately
+            pollStatus();
+        }
+
+        // UI update function
+        function updateProcessUI(processName, status) {
+            const row = document.querySelector(`.grid-row[data-process="${processName}"]`);
+            if (!row) return;
+            
+            const statusIndicator = row.querySelector('.status-indicator');
+            const statusText = row.querySelector('.status-text');
+            const startBtn = row.querySelector('.start-btn');
+            const stopBtn = row.querySelector('.stop-btn');
+            
+            // Update status indicator and text
+            statusIndicator.className = `status-indicator status-${status}`;
+            statusText.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            
+            // Update button states
+            switch (status) {
+                case ProcessStatus.RUNNING:
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    showCommand(`${processName} is now running`);
+                    break;
+                case ProcessStatus.STOPPED:
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    showCommand(`${processName} is now stopped`);
+                    break;
+                case ProcessStatus.STARTING:
+                case ProcessStatus.STOPPING:
+                    startBtn.disabled = true;
+                    stopBtn.disabled = true;
+                    break;
+                case ProcessStatus.ERROR:
+                    startBtn.disabled = false;
+                    stopBtn.disabled = false;
+                    break;
+            }
+            
+            // Store the current status
+            activeProcesses.set(processName, status);
+        }
+
+        // Current implementation - showing commands only
+        function startProcess(processName) {
+            const serverSelect = document.getElementById('server-select');
+            const serverName = serverSelect.value || 'Local PC';
+            
+            fetch('/get_process_commands', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    server: serverName,
+                    process: processName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showCommand(`Start Command: ${data.start_command}`);
+                } else {
+                    showCommand(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showCommand('Error fetching process commands');
+            });
+        }
+
+        function stopProcess(processName) {
+            const serverSelect = document.getElementById('server-select');
+            const serverName = serverSelect.value || 'Local PC';
+            
+            fetch('/get_process_commands', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    server: serverName,
+                    process: processName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showCommand(`Stop Command: ${data.stop_command}`);
+                } else {
+                    showCommand(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showCommand('Error fetching process commands');
+            });
+        }
+
+        // New implementation using ProcessManager - commented out until ready
+        /*
+        async function startProcess(processName) {
+            const serverSelect = document.getElementById('server-select');
+            const serverName = serverSelect.value || 'Local PC';
+            
+            showCommand(`Starting ${processName}...`);
+            
+            try {
+                const response = await fetch('/execute_process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server: serverName,
+                        process: processName,
+                        action: 'start'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showCommand(`Successfully started ${processName}`);
+                    // Optionally check status
+                    checkProcessStatus(serverName, processName);
+                } else {
+                    showCommand(`Error starting ${processName}: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showCommand(`Failed to start ${processName}`);
+            }
+        }
+
+        async function stopProcess(processName) {
+            const serverSelect = document.getElementById('server-select');
+            const serverName = serverSelect.value || 'Local PC';
+            
+            showCommand(`Stopping ${processName}...`);
+            
+            try {
+                const response = await fetch('/execute_process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server: serverName,
+                        process: processName,
+                        action: 'stop'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showCommand(`Successfully stopped ${processName}`);
+                    // Optionally check status
+                    checkProcessStatus(serverName, processName);
+                } else {
+                    showCommand(`Error stopping ${processName}: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showCommand(`Failed to stop ${processName}`);
+            }
+        }
+
+        async function checkProcessStatus(serverName, processName) {
+            try {
+                const response = await fetch('/process_status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server: serverName,
+                        process: processName
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const status = data.status.running ? 'running' : 'stopped';
+                    showCommand(`${processName} is ${status}`);
+                    
+                    // Update UI elements if they exist
+                    const statusElement = document.querySelector(`[data-process="${processName}"] .status`);
+                    if (statusElement) {
+                        statusElement.textContent = status;
+                        statusElement.className = `status ${status}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking status:', error);
+            }
+        }
+        */
+        
+        async function togglePowershellPanels() {
+            const checkbox = document.getElementById('show-powershell');
+            const powershellPanels = document.querySelectorAll('.expansion-panel');
+            
+            try {
+                const response = await fetch('/update_ui_config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        show_powershell: checkbox.checked
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    // Refresh the page to reflect changes
+                    location.reload();
+                } else {
+                    console.error('Failed to update UI configuration');
+                    checkbox.checked = !checkbox.checked; // Revert checkbox state
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                checkbox.checked = !checkbox.checked; // Revert checkbox state
+            }
         }
     </script>
 </body>
