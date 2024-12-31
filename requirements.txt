@@ -2,3 +2,7 @@ Flask==2.3.3
 Flask-Login==0.6.2
 pypsrp==0.8.1
 psutil==5.9.7
+Werkzeug==2.3.7
+click>=8.0
+itsdangerous>=2.0
+Jinja2>=3.0
